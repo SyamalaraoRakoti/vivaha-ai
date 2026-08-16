@@ -12,7 +12,7 @@
 
 const CONFIG = {
   // The backend service URL. Leave as "" until you deploy the backend.
-  API_BASE: "",
+  API_BASE: "https://vivaha-ai-api.onrender.com",
 
   // true  → all Gemini + Google Sheets traffic goes through the backend
   //         (no API key or sheet URL needed by visitors).
