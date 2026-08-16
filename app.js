@@ -305,6 +305,8 @@ function safeParseJson(text) {
   const last = t.lastIndexOf("}");
   if (first !== -1 && last > first) t = t.slice(first, last + 1);
   t = t.replace(/,\s*([}\]])/g, "$1");
+  // Repair common LLM JSON slip-ups: unquoted keys (e.g.  pt: 33 -> "pt": 33).
+  t = t.replace(/([{,]\s*)([A-Za-z_][A-Za-z0-9_]*)(\s*:)/g, '$1"$2"$3');
   try { return JSON.parse(t); } catch (_) { return null; }
 }
 
@@ -315,7 +317,7 @@ function renderPlan(plan) {
   if (plan.budget) {
     h += "<h3>Budget</h3><div class=\"table-wrap\"><table><thead><tr><th>Category</th><th>Amount</th><th>%</th><th>Notes</th></tr></thead><tbody>";
     (plan.budget.allocations || []).forEach((a) => {
-      h += "<tr><td>" + esc(a.category) + "</td><td>" + fmt(a.amount) + "</td><td>" + esc(a.pct) + "%</td><td>" + esc(a.notes || "") + "</td></tr>";
+      h += "<tr><td>" + esc(a.category) + "</td><td>" + fmt(a.amount) + "</td><td>" + esc(a.pct != null ? a.pct : a.percentage) + "%</td><td>" + esc(a.notes || "") + "</td></tr>";
     });
     h += "<tr class=\"total\"><td>Contingency</td><td>" + fmt(plan.budget.contingency) + "</td><td>—</td><td></td></tr>";
     h += "<tr class=\"total\"><td>Total</td><td>" + fmt(plan.budget.total) + "</td><td>100%</td><td>" + esc(plan.budget.currency || "INR") + "</td></tr>";

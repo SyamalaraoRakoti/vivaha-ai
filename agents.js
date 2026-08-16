@@ -102,7 +102,7 @@ Produce a working artefact as STRICT, VALID JSON with this exact structure (no m
     "total": 0,
     "contingency": 0,
     "allocations": [
-      {"category": "Venue", "amount": 0, "pct": 0, "notes": "why this amount"}
+      {"category": "Venue", "amount": 0, "percentage": 0, "notes": "why this amount"}
     ]
   },
   "vendors": [
