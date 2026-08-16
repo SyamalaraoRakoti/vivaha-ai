@@ -8,8 +8,8 @@
 /* ------------------------------ constants ------------------------------- */
 
 const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta";
-const MODELS = ["gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.5-flash", "gemini-flash-latest"];
-const DEFAULT_MODEL = "gemini-3.6-flash";
+const MODELS = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-3.6-flash", "gemini-3.7-flash"];
+const DEFAULT_MODEL = "gemini-3.5-flash-lite";
 
 /* True when a hosted backend (Render) is configured. When true, the Gemini key
    and the Google Sheet live server-side and visitors need nothing to run it. */
