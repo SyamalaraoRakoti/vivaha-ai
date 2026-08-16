@@ -91,7 +91,7 @@ async function fetchVendorData(sheetInput, args) {
     const params = new URLSearchParams();
     if (args && args.category) params.set("category", args.category);
     if (args && args.city) params.set("city", args.city);
-    const res = await fetch(CONFIG.API_BASE + "/api/vendors?" + params.toString());
+    const res = await backendFetch(CONFIG.API_BASE + "/api/vendors?" + params.toString());
     if (!res.ok) {
       let msg = "HTTP " + res.status;
       try { const j = await res.json(); msg = (j && j.error) || msg; } catch (_) {}
@@ -117,9 +117,26 @@ async function fetchVendorData(sheetInput, args) {
 
 /* ------------------------------ Gemini API ------------------------------ */
 
+/* Retries transient network failures (e.g. Render's free-tier cold start) so
+   a single "Load failed" / "Failed to fetch" does not kill the whole run. */
+async function backendFetch(url, opts, retries) {
+  if (retries == null) retries = 3;
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await fetch(url, opts);
+    } catch (e) {
+      if (i < retries) {
+        await new Promise((r) => setTimeout(r, 4000 * (i + 1)));
+        continue;
+      }
+      throw e;
+    }
+  }
+}
+
 async function callGemini(model, apiKey, body) {
   if (usingBackend()) {
-    const res = await fetch(CONFIG.API_BASE + "/api/generate", {
+    const res = await backendFetch(CONFIG.API_BASE + "/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ model: model, ...body }),

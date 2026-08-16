@@ -421,5 +421,10 @@
     $("mkt-category").addEventListener("change", applyMarketFilters);
     $("mkt-city").addEventListener("change", applyMarketFilters);
     $("mkt-refresh").addEventListener("click", loadMarketplace);
+
+    // Warm up the backend so the first Run does not hit Render's cold start.
+    if (usingBackend()) {
+      fetch(CONFIG.API_BASE + "/").catch(() => {});
+    }
   });
 })();
