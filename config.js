@@ -21,5 +21,5 @@ const CONFIG = {
   USE_BACKEND: true,
 
   // Only used when USE_BACKEND is false.
-  DEFAULT_MODEL: "gemini-2.5-flash",
+  DEFAULT_MODEL: "gemini-flash-latest",
 };

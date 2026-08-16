@@ -8,8 +8,8 @@
 /* ------------------------------ constants ------------------------------- */
 
 const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta";
-const MODELS = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash", "gemini-1.5-flash"];
-const DEFAULT_MODEL = "gemini-2.5-flash";
+const MODELS = ["gemini-flash-latest", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash"];
+const DEFAULT_MODEL = "gemini-flash-latest";
 
 /* True when a hosted backend (Render) is configured. When true, the Gemini key
    and the Google Sheet live server-side and visitors need nothing to run it. */
@@ -204,7 +204,7 @@ async function runAgentTurn({ model, apiKey, systemPrompt, userPrompt, tools, to
       });
     }
     bodyBase.contents.push({ role: "model", parts: fnCallParts });
-    bodyBase.contents.push({ role: "function", parts: responseParts });
+    bodyBase.contents.push({ role: "user", parts: responseParts });
   }
   throw new Error("Tool-call loop exceeded maximum iterations.");
 }

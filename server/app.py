@@ -98,7 +98,7 @@ def generate():
         return jsonify(error="GEMINI_API_KEY is not configured on the server."), 500
 
     data = request.get_json(force=True, silent=True) or {}
-    model = (data.get("model") or "gemini-2.5-flash")
+    model = (data.get("model") or "gemini-flash-latest")
 
     payload = {}
     for field in ("systemInstruction", "contents", "tools", "generationConfig"):
