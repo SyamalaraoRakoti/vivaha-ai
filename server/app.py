@@ -109,8 +109,8 @@ def generate():
     url = "%s/models/%s:generateContent?key=%s" % (GEMINI_BASE, model, GEMINI_API_KEY)
 
     # Retry on transient rate-limit (HTTP 429 / "quota") errors, honouring the
-    # server's "retry in Xs" hint so a single agent call survives a busy moment.
-    for attempt in range(4):
+    # server's "retry in Xs" hint (capped to stay well under Render's 100s limit).
+    for attempt in range(3):
         req = urllib.request.Request(
             url, data=json.dumps(payload).encode("utf-8"),
             headers={"Content-Type": "application/json"},
@@ -127,15 +127,15 @@ def generate():
                 detail = {}
             message = detail.get("error", {}).get("message", "Gemini returned HTTP %s" % e.code)
             if e.code == 429 or "quota" in message.lower() or "rate" in message.lower():
-                if attempt < 3:
+                if attempt < 2:
                     m = re.search(r"retry in (\d+(?:\.\d+)?)s", message)
-                    wait = (float(m.group(1)) + 1.5) if m else (4 * (attempt + 1))
-                    time.sleep(min(wait, 60))
+                    wait = (float(m.group(1)) + 1.5) if m else (5 * (attempt + 1))
+                    time.sleep(min(wait, 15))
                     continue
             return jsonify(error=message, status=e.code), e.code
         except Exception as ex:  # noqa: BLE001
-            if attempt < 3:
-                time.sleep(3 * (attempt + 1))
+            if attempt < 2:
+                time.sleep(4 * (attempt + 1))
                 continue
             return jsonify(error="Backend error: %s" % ex), 502
 
