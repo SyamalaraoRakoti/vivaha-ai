@@ -20,99 +20,128 @@
   </header>
 
   <main>
-    <section class="setup-card">
-      <h2>1 · Configure the organisation</h2>
-      <p class="hint" id="mode-note"></p>
-      <form id="config-form" autocomplete="off">
-        <div class="grid">
-          <label class="field">
-            <span>Model</span>
-            <select id="model"></select>
-          </label>
-          <label class="field">
-            <span>Couple</span>
-            <input id="couple" type="text" value="Ananya & Rohan" />
-          </label>
-          <label class="field">
-            <span>Wedding city</span>
-            <input id="city" type="text" value="Jaipur" />
-          </label>
-          <label class="field">
-            <span>Wedding date</span>
-            <input id="date" type="date" value="2026-11-21" />
-          </label>
-          <label class="field">
-            <span>Total budget (₹)</span>
-            <input id="budget" type="number" min="1" value="1500000" />
-          </label>
-          <label class="field">
-            <span>Guest count</span>
-            <input id="guests" type="number" min="1" value="350" />
-          </label>
-          <label class="field full">
-            <span>Style / vision</span>
-            <input id="style" type="text" value="Royal Rajasthani palace wedding with a modern touch" />
-          </label>
-          <label class="field full">
-            <span>Top priorities</span>
-            <input id="priorities" type="text" value="Photography, food quality, and comfort for grandparents" />
-          </label>
-          <label class="field full">
-            <span>Special notes (optional)</span>
-            <input id="notes" type="text" placeholder="e.g. vegetarian food only, outdoor sangeet…" />
-          </label>
-        </div>
-        <details class="advanced" id="advanced">
-          <summary>Advanced — direct Gemini access (local testing only)</summary>
+    <nav class="tabs" id="tabs" aria-label="Sections">
+      <button class="tab active" data-tab="planner">🪔 Wedding Planner</button>
+      <button class="tab" data-tab="marketplace">🏪 Vendor Marketplace</button>
+      <button class="tab" data-tab="agents">🤖 Meet the Agents</button>
+    </nav>
+
+    <!-- ============================ Planner tab ============================ -->
+    <div class="tab-panel" id="tab-planner">
+      <section class="setup-card">
+        <h2>Plan a wedding</h2>
+        <p class="hint" id="mode-note"></p>
+        <form id="config-form" autocomplete="off">
           <div class="grid">
-            <label class="field full">
-              <span>Gemini API key</span>
-              <input id="api-key" type="password" placeholder="Paste your Gemini API key (starts with AIza…)" />
+            <label class="field">
+              <span>Model</span>
+              <select id="model"></select>
+            </label>
+            <label class="field">
+              <span>Couple</span>
+              <input id="couple" type="text" value="Ananya & Rohan" />
+            </label>
+            <label class="field">
+              <span>Wedding city</span>
+              <input id="city" type="text" value="Jaipur" />
+            </label>
+            <label class="field">
+              <span>Wedding date</span>
+              <input id="date" type="date" value="2026-11-21" />
+            </label>
+            <label class="field">
+              <span>Total budget (₹)</span>
+              <input id="budget" type="number" min="1" value="1500000" />
+            </label>
+            <label class="field">
+              <span>Guest count</span>
+              <input id="guests" type="number" min="1" value="350" />
             </label>
             <label class="field full">
-              <span>Live data — Google Sheet (public share URL or ID)</span>
-              <input id="sheet-url" type="text" placeholder="https://docs.google.com/spreadsheets/d/<ID>/edit…" />
+              <span>Style / vision</span>
+              <input id="style" type="text" value="Royal Rajasthani palace wedding with a modern touch" />
+            </label>
+            <label class="field full">
+              <span>Top priorities</span>
+              <input id="priorities" type="text" value="Photography, food quality, and comfort for grandparents" />
+            </label>
+            <label class="field full">
+              <span>Special notes (optional)</span>
+              <input id="notes" type="text" placeholder="e.g. vegetarian food only, outdoor sangeet…" />
             </label>
           </div>
-        </details>
-        <button type="submit" id="run-btn" class="run-btn">▶ Run the agentic pipeline</button>
-      </form>
-      <p class="status" id="setup-status"></p>
-    </section>
+          <details class="advanced" id="advanced">
+            <summary>Advanced — direct Gemini access (local testing only)</summary>
+            <div class="grid">
+              <label class="field full">
+                <span>Gemini API key</span>
+                <input id="api-key" type="password" placeholder="Paste your Gemini API key (starts with AIza…)" />
+              </label>
+              <label class="field full">
+                <span>Live data — Google Sheet (public share URL or ID)</span>
+                <input id="sheet-url" type="text" placeholder="https://docs.google.com/spreadsheets/d/<ID>/edit…" />
+              </label>
+            </div>
+          </details>
+          <button type="submit" id="run-btn" class="run-btn">▶ Run the agentic pipeline</button>
+        </form>
+        <p class="status" id="setup-status"></p>
+      </section>
 
-    <section class="pipeline" id="pipeline" aria-label="Agent pipeline">
-      <h2>2 · The pipeline</h2>
-      <div class="chain" id="chain">
-        <div class="node" data-key="researcher"><span class="node-emoji">🔍</span><span class="node-name">Researcher</span><span class="node-agent">Aanya</span></div>
-        <div class="arrow">→</div>
-        <div class="node" data-key="designer"><span class="node-emoji">🎨</span><span class="node-name">Designer</span><span class="node-agent">Ishaan</span></div>
-        <div class="arrow">→</div>
-        <div class="node" data-key="maker"><span class="node-emoji">🛠️</span><span class="node-name">Maker</span><span class="node-agent">Ravi</span></div>
-        <div class="arrow">→</div>
-        <div class="node" data-key="communicator"><span class="node-emoji">📣</span><span class="node-name">Communicator</span><span class="node-agent">Meera</span></div>
-        <div class="arrow">→</div>
-        <div class="node" data-key="manager"><span class="node-emoji">🧭</span><span class="node-name">Manager</span><span class="node-agent">Arjun</span></div>
-      </div>
-    </section>
+      <section class="pipeline" id="pipeline" aria-label="Agent pipeline">
+        <h2>The pipeline</h2>
+        <div class="chain" id="chain">
+          <div class="node" data-key="researcher"><span class="node-emoji">🔍</span><span class="node-name">Researcher</span><span class="node-agent">Aanya</span></div>
+          <div class="arrow">→</div>
+          <div class="node" data-key="designer"><span class="node-emoji">🎨</span><span class="node-name">Designer</span><span class="node-agent">Ishaan</span></div>
+          <div class="arrow">→</div>
+          <div class="node" data-key="maker"><span class="node-emoji">🛠️</span><span class="node-name">Maker</span><span class="node-agent">Ravi</span></div>
+          <div class="arrow">→</div>
+          <div class="node" data-key="communicator"><span class="node-emoji">📣</span><span class="node-name">Communicator</span><span class="node-agent">Meera</span></div>
+          <div class="arrow">→</div>
+          <div class="node" data-key="manager"><span class="node-emoji">🧭</span><span class="node-name">Manager</span><span class="node-agent">Arjun</span></div>
+        </div>
+      </section>
 
-    <section class="outputs" id="outputs">
-      <h2>3 · Agent outputs <span class="subtitle">— each agent's output becomes the next agent's input</span></h2>
-      <div id="outputs-container"></div>
-    </section>
+      <section class="outputs" id="outputs">
+        <h2>Agent outputs <span class="subtitle">— each agent's output becomes the next agent's input</span></h2>
+        <div id="outputs-container"></div>
+      </section>
 
-    <section class="package" id="package" hidden>
-      <h2>4 · The wedding plan package <span class="subtitle">— the Maker's working artefact</span></h2>
-      <div class="package-actions">
-        <button id="download-btn" class="ghost-btn">⬇ Download plan JSON</button>
-        <button id="copy-btn" class="ghost-btn">Copy JSON</button>
-      </div>
-      <div id="package-body"></div>
-    </section>
+      <section class="package" id="package" hidden>
+        <h2>The wedding plan package <span class="subtitle">— the Maker's working artefact</span></h2>
+        <div class="package-actions">
+          <button id="download-btn" class="ghost-btn">⬇ Download plan JSON</button>
+          <button id="copy-btn" class="ghost-btn">Copy JSON</button>
+        </div>
+        <div id="package-body"></div>
+      </section>
+    </div>
 
-    <section class="evidence" id="evidence" hidden>
-      <h2>5 · Live data evidence</h2>
-      <div id="evidence-body"></div>
-    </section>
+    <!-- ========================= Marketplace tab ========================== -->
+    <div class="tab-panel" id="tab-marketplace" hidden>
+      <section>
+        <h2>Vendor Marketplace</h2>
+        <p class="hint" id="mkt-hint">Loading live vendor directory…</p>
+        <div class="market-controls">
+          <input id="mkt-search" type="text" placeholder="Search by name or specialty…" />
+          <select id="mkt-category"><option value="">All categories</option></select>
+          <select id="mkt-city"><option value="">All cities</option></select>
+          <button id="mkt-refresh" class="ghost-btn" type="button">↻ Refresh</button>
+        </div>
+        <p class="status" id="mkt-status"></p>
+        <div class="table-wrap"><table id="mkt-table"></table></div>
+      </section>
+    </div>
+
+    <!-- ============================ Agents tab ============================ -->
+    <div class="tab-panel" id="tab-agents" hidden>
+      <section>
+        <h2>Meet the Agents</h2>
+        <p class="hint">Five specialised agents collaborate in a pipeline. You can run any single agent (it runs the pipeline up to and including that agent) to see its output.</p>
+        <div id="agents-list"></div>
+      </section>
+    </div>
   </main>
 
   <footer>

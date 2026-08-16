@@ -1,5 +1,6 @@
 /* ==========================================================================
-   Vivaha AI — UI wiring: form, pipeline status, agent cards, plan package.
+   Vivaha AI — UI wiring: tabs, pipeline status, agent cards, plan package,
+   vendor marketplace and individual agent runs.
    ========================================================================== */
 "use strict";
 
@@ -7,7 +8,7 @@
   const state = {
     running: false,
     results: null,
-    toolCalls: [],
+    marketRows: [],
   };
 
   /* ------------------------- session persistence ------------------------ */
@@ -35,6 +36,43 @@
       if (m === DEFAULT_MODEL) o.selected = true;
       sel.appendChild(o);
     });
+  }
+
+  function initTabs() {
+    const tabs = document.querySelectorAll(".tab");
+    tabs.forEach((t) => {
+      t.addEventListener("click", () => {
+        tabs.forEach((x) => x.classList.remove("active"));
+        t.classList.add("active");
+        document.querySelectorAll(".tab-panel").forEach((p) => { p.hidden = true; });
+        $("tab-" + t.dataset.tab).hidden = false;
+        if (t.dataset.tab === "marketplace" && !state.marketRows.length) loadMarketplace();
+      });
+    });
+  }
+
+  /* --------------------------- config helpers --------------------------- */
+
+  function getConfig() {
+    if (usingBackend()) return { model: $("model").value, apiKey: "backend", sheet: "backend" };
+    const apiKey = $("api-key").value.trim();
+    const sheet = $("sheet-url").value.trim();
+    if (!apiKey || !sheet) return null;
+    remember();
+    return { model: $("model").value, apiKey, sheet };
+  }
+
+  function readBrief() {
+    return {
+      couple: $("couple").value.trim(),
+      city: $("city").value.trim(),
+      date: $("date").value,
+      budget: Number($("budget").value),
+      guests: Number($("guests").value),
+      style: $("style").value.trim(),
+      priorities: $("priorities").value.trim(),
+      notes: $("notes").value.trim(),
+    };
   }
 
   /* --------------------------- agent cards ------------------------------ */
@@ -103,20 +141,13 @@
     }).join("");
   }
 
-  /* ---------------------------- evidence -------------------------------- */
-
-  function renderEvidence() {
-    const live = state.toolCalls.find((tc) => tc.name === "fetch_live_vendor_database");
-    if (!live) return;
-    $("evidence").hidden = false;
-    const total = live.result && live.result.total;
-    const fetchedAt = live.result && live.result.fetchedAt;
-    $("evidence-body").innerHTML =
-      '<p class="ok">🟢 <strong>Live query confirmed.</strong> The Researcher agent called <code>fetch_live_vendor_database</code> at run time and read the vendor marketplace (a public Google Sheet) directly — ' +
-      (total != null ? "<strong>" + total + " vendor records</strong> available" : "vendor records") +
-      (fetchedAt ? " at " + esc(new Date(fetchedAt).toLocaleTimeString()) : "") +
-      ". No vendor data is hardcoded in this codebase.</p>" +
-      '<pre class="json">' + esc(JSON.stringify(live.result.rows.slice(0, 3), null, 2)) + '\n… (truncated)</pre>';
+  function renderToolNote(toolCalls) {
+    if (!toolCalls || !toolCalls.length) return "";
+    return toolCalls.map((tc) => {
+      const n = tc.result && Array.isArray(tc.result.rows) ? tc.result.rows.length : null;
+      return '<div class="tool-line"><span class="tool-name">⚡ ' + esc(tc.name) + '</span>' +
+        (n != null ? '<span class="tool-result">→ fetched <strong>' + n + ' vendors</strong> live from Google Sheets</span>' : '') + '</div>';
+    }).join("");
   }
 
   /* --------------------------- plan package ----------------------------- */
@@ -152,43 +183,22 @@
     setTimeout(() => { b.textContent = "Copy JSON"; }, 1500);
   }
 
-  /* ----------------------------- run ----------------------------------- */
+  /* --------------------------- full pipeline ---------------------------- */
 
   async function onRun(e) {
     e.preventDefault();
     if (state.running) return;
-    let apiKey, sheet;
-    if (usingBackend()) {
-      apiKey = "backend";
-      sheet = "backend";
-    } else {
-      apiKey = $("api-key").value.trim();
-      sheet = $("sheet-url").value.trim();
-      if (!apiKey || !sheet) { setStatus("Direct mode needs both a Gemini API key and a Google Sheet URL.", true); return; }
-      remember();
-    }
+    const cfg = getConfig();
+    if (!cfg) { setStatus("Direct mode needs both a Gemini API key and a Google Sheet URL.", true); return; }
 
     state.running = true;
-    state.toolCalls = [];
     $("run-btn").disabled = true;
     $("run-btn").textContent = "Agents working…";
     setStatus("Running the pipeline…", false);
 
     $("outputs-container").innerHTML = "";
     $("package").hidden = true;
-    $("evidence").hidden = true;
     AGENT_ORDER.forEach((k) => { agentCard(k); setAgentState(k, "idle", "waiting"); });
-
-    const brief = {
-      couple: $("couple").value.trim(),
-      city: $("city").value.trim(),
-      date: $("date").value,
-      budget: Number($("budget").value),
-      guests: Number($("guests").value),
-      style: $("style").value.trim(),
-      priorities: $("priorities").value.trim(),
-      notes: $("notes").value.trim(),
-    };
 
     const hooks = {
       onAgent: (key) => setAgentState(key, "running", "working…"),
@@ -196,15 +206,13 @@
         setAgentState(key, "done", "done");
         if (key === "maker") {
           setAgentOutput(key, res.plan
-            ? '<div class="json-ok">✓ Valid JSON artefact — rendered below in section 4.</div>'
+            ? '<div class="json-ok">✓ Valid JSON artefact — rendered below in the wedding plan package.</div>'
             : '<pre class="json">' + esc(res.text) + "</pre>");
         } else {
           setAgentOutput(key, renderMarkdown(res.text));
         }
         setToolEvidence(key, res.toolLog);
-        if (res.toolLog) state.toolCalls.push(...res.toolLog);
         if (key === "maker") renderPackage();
-        if (key === "manager") renderEvidence();
       },
       onError: (key, e) => {
         setAgentState(key, "error", "failed");
@@ -213,7 +221,7 @@
     };
 
     try {
-      state.results = await runPipeline({ model: $("model").value, apiKey, sheet, brief }, hooks);
+      state.results = await runPipeline({ model: cfg.model, apiKey: cfg.apiKey, sheet: cfg.sheet, brief: readBrief() }, hooks);
       setStatus("Done in " + ((state.results._meta.elapsedMs / 1000) || 0).toFixed(1) + "s — all five agents handed off successfully.", false);
     } catch (e) {
       setStatus("Pipeline stopped: " + (e.message || e), true);
@@ -230,18 +238,159 @@
     el.classList.toggle("error", !!isErr);
   }
 
-  /* ----------------------------- bind ---------------------------------- */
+  /* -------------------------- vendor marketplace ------------------------ */
 
-  document.addEventListener("DOMContentLoaded", () => {
-    initModelSelect();
-    recall();
-    setModeNote();
-    $("config-form").addEventListener("submit", onRun);
-    $("download-btn").addEventListener("click", downloadJson);
-    $("copy-btn").addEventListener("click", copyJson);
-    $("api-key").addEventListener("input", remember);
-    $("sheet-url").addEventListener("input", remember);
-  });
+  async function loadMarketplace() {
+    const sheet = usingBackend() ? "backend" : $("sheet-url").value.trim();
+    const status = $("mkt-status");
+    status.classList.remove("error");
+    status.textContent = "Loading live vendor directory…";
+    try {
+      const { rows, total, fetchedAt } = await fetchVendorData(sheet, {});
+      state.marketRows = rows;
+      populateMarketFilters(rows);
+      applyMarketFilters();
+      $("mkt-hint").textContent = "Live directory pulled from our Google Sheets vendor database at query time — nothing is hardcoded.";
+      status.textContent = "Live · " + total + " vendors · last fetched " + (fetchedAt ? new Date(fetchedAt).toLocaleTimeString() : "now");
+    } catch (e) {
+      status.textContent = "Could not load vendors: " + (e.message || e);
+      status.classList.add("error");
+      $("mkt-table").innerHTML = "";
+    }
+  }
+
+  function populateMarketFilters(rows) {
+    fillSelect("mkt-category", [...new Set(rows.map((r) => r.category))].sort());
+    fillSelect("mkt-city", [...new Set(rows.map((r) => r.city))].sort());
+  }
+
+  function fillSelect(id, values) {
+    const sel = $(id);
+    const keep = sel.value;
+    sel.innerHTML = '<option value="">' + (id === "mkt-category" ? "All categories" : "All cities") + "</option>";
+    values.forEach((v) => {
+      const o = document.createElement("option");
+      o.value = v; o.textContent = v;
+      sel.appendChild(o);
+    });
+    sel.value = keep;
+  }
+
+  function applyMarketFilters() {
+    const q = $("mkt-search").value.trim().toLowerCase();
+    const cat = $("mkt-category").value;
+    const city = $("mkt-city").value;
+    let rows = state.marketRows || [];
+    if (q) rows = rows.filter((r) => (r.name || "").toLowerCase().includes(q) || (r.specialty || "").toLowerCase().includes(q));
+    if (cat) rows = rows.filter((r) => r.category === cat);
+    if (city) rows = rows.filter((r) => r.city === city);
+    renderMarketTable(rows);
+  }
+
+  function renderMarketTable(rows) {
+    const table = $("mkt-table");
+    if (!rows.length) { table.innerHTML = '<tbody><tr><td class="empty">No vendors match those filters.</td></tr></tbody>'; return; }
+    let h = '<thead><tr><th>Vendor</th><th>Category</th><th>City</th><th>Price range</th><th>Rating</th><th>Capacity</th><th>Availability</th></tr></thead><tbody>';
+    rows.forEach((r) => {
+      h += '<tr>' +
+        '<td><strong>' + esc(r.name) + '</strong><div class="muted">' + esc(r.specialty || "") + '</div></td>' +
+        '<td>' + esc(r.category) + '</td>' +
+        '<td>' + esc(r.city) + '</td>' +
+        '<td>' + esc(fmt(r.price_min)) + ' – ' + esc(fmt(r.price_max)) + '</td>' +
+        '<td>' + esc(r.rating != null && r.rating !== "" ? r.rating : "—") + ' ★</td>' +
+        '<td>' + (r.capacity && Number(r.capacity) > 0 ? esc(r.capacity) + " guests" : "—") + '</td>' +
+        '<td>' + esc(r.availability || "—") + '</td>' +
+        '</tr>';
+    });
+    h += '</tbody>';
+    table.innerHTML = h;
+  }
+
+  /* --------------------------- individual agents ------------------------ */
+
+  function renderAgentsList() {
+    const list = $("agents-list");
+    list.innerHTML = "";
+    AGENT_ORDER.forEach((key) => {
+      const a = AGENTS[key];
+      const card = document.createElement("article");
+      card.className = "agent-profile";
+      card.dataset.key = key;
+      card.style.setProperty("--accent", a.color);
+      card.innerHTML =
+        '<header class="agent-head">' +
+          '<div class="avatar" style="background:' + a.color + '">' + a.emoji + '</div>' +
+          '<div class="agent-id">' +
+            '<h3>' + esc(a.name) + ' <span class="archetype">' + esc(a.archetype) + '</span></h3>' +
+            '<p class="agent-title">' + esc(a.title) + '</p>' +
+          '</div>' +
+        '</header>' +
+        '<p class="superpower"><span>Superpower</span> ' + esc(a.superpower) + ' · <span>Produces</span> ' + esc(a.produces) + '</p>' +
+        '<details class="prompt"><summary>View system prompt</summary><pre>' + esc(a.systemPrompt) + '</pre></details>' +
+        '<button class="ghost-btn profile-run" type="button">▶ Run this agent</button>' +
+        '<p class="profile-status"></p>' +
+        '<div class="profile-output" hidden></div>';
+      list.appendChild(card);
+      card.querySelector(".profile-run").addEventListener("click", () => runSingleAgent(key));
+    });
+  }
+
+  function runSingleAgent(key) {
+    if (state.running) return;
+    const cfg = getConfig();
+    if (!cfg) {
+      const status = document.querySelector('.agent-profile[data-key="' + key + '"] .profile-status');
+      status.textContent = "Direct mode needs an API key + sheet (see Advanced on the Planner tab).";
+      return;
+    }
+    const card = document.querySelector('.agent-profile[data-key="' + key + '"]');
+    const outBox = card.querySelector(".profile-output");
+    const statusEl = card.querySelector(".profile-status");
+    const runBtn = card.querySelector(".profile-run");
+    const chain = AGENT_ORDER.slice(0, AGENT_ORDER.indexOf(key) + 1);
+    const started = performance.now();
+
+    state.running = true;
+    runBtn.disabled = true;
+    runBtn.textContent = "Running…";
+    outBox.hidden = false;
+    outBox.innerHTML = "";
+    statusEl.textContent = "Running: " + chain.map((k) => AGENTS[k].name).join(" → ") + " …";
+
+    const hooks = {
+      onAgent: () => {},
+      onDone: (k, res) => {
+        if (k !== key) return;
+        let html = renderToolNote(res.toolLog);
+        if (key === "maker") {
+          html += res.plan
+            ? '<div class="json-ok">✓ ' + esc(AGENTS[key].name) + ' produced a valid plan:</div>' + renderPlan(res.plan)
+            : '<pre class="json">' + esc(res.text) + "</pre>";
+        } else {
+          html += renderMarkdown(res.text);
+        }
+        outBox.innerHTML = html;
+        statusEl.textContent = "Done in " + ((performance.now() - started) / 1000).toFixed(1) + "s";
+      },
+      onError: (k, e) => {
+        if (k !== key) return;
+        outBox.innerHTML = '<p class="warn">⚠ ' + esc(String(e.message || e)) + "</p>";
+        statusEl.textContent = "Failed";
+      },
+    };
+
+    runPipeline({ model: cfg.model, apiKey: cfg.apiKey, sheet: cfg.sheet, brief: readBrief(), stopAt: key }, hooks)
+      .then(() => { finish(); })
+      .catch((e) => { outBox.innerHTML = '<p class="warn">⚠ ' + esc(String(e.message || e)) + "</p>"; statusEl.textContent = "Failed"; finish(); });
+
+    function finish() {
+      state.running = false;
+      runBtn.disabled = false;
+      runBtn.textContent = "▶ Run this agent";
+    }
+  }
+
+  /* ----------------------------- mode note ------------------------------ */
 
   function setModeNote() {
     const note = $("mode-note");
@@ -254,4 +403,23 @@
       $("advanced").open = true;
     }
   }
+
+  /* ----------------------------- bind ---------------------------------- */
+
+  document.addEventListener("DOMContentLoaded", () => {
+    initModelSelect();
+    initTabs();
+    recall();
+    setModeNote();
+    renderAgentsList();
+    $("config-form").addEventListener("submit", onRun);
+    $("download-btn").addEventListener("click", downloadJson);
+    $("copy-btn").addEventListener("click", copyJson);
+    $("api-key").addEventListener("input", remember);
+    $("sheet-url").addEventListener("input", remember);
+    $("mkt-search").addEventListener("input", applyMarketFilters);
+    $("mkt-category").addEventListener("change", applyMarketFilters);
+    $("mkt-city").addEventListener("change", applyMarketFilters);
+    $("mkt-refresh").addEventListener("click", loadMarketplace);
+  });
 })();

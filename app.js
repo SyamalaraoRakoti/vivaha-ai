@@ -365,7 +365,7 @@ async function runAgent(agent, { model, apiKey, briefText, priorContext, toolCon
 }
 
 async function runPipeline(cfg, hooks) {
-  const { model, apiKey, sheet, brief } = cfg;
+  const { model, apiKey, sheet, brief, stopAt } = cfg;
   const briefText = buildBriefText(brief);
   const out = {};
   let context = "";
@@ -388,42 +388,46 @@ async function runPipeline(cfg, hooks) {
     }
   };
 
-  // 1. Researcher — the only agent with the live-data tool call
-  await run("researcher", AGENTS.researcher, {
-    tools: [VENDOR_TOOL_DECLARATION],
-    executors: { fetch_live_vendor_database: (args) => fetchVendorData(sheet, args) },
-  });
-
-  // 2. Designer
-  await run("designer", AGENTS.designer);
-
-  // 3. Maker — produces the JSON artefact (with a retry guard against truncation)
-  hooks && hooks.onAgent && hooks.onAgent("maker");
-  try {
-    let mk = await runAgent(AGENTS.maker, { model, apiKey, briefText, priorContext: context, toolConfig: { responseJson: true } });
-    let plan = safeParseJson(mk.text);
-    if (!plan) {
-      const fixCtx = context +
-        "\n\n## IMPORTANT FIX INSTRUCTION\nYour previous output was not valid JSON (it may have been truncated). " +
-        "Return ONLY a complete, valid JSON object matching the exact schema in your system prompt. " +
-        "Close every brace and bracket. No markdown, no comments, no trailing text.";
-      mk = await runAgent(AGENTS.maker, { model, apiKey, briefText, priorContext: fixCtx, toolConfig: { responseJson: true } });
-      plan = safeParseJson(mk.text);
+  const runMaker = async () => {
+    hooks && hooks.onAgent && hooks.onAgent("maker");
+    try {
+      let mk = await runAgent(AGENTS.maker, { model, apiKey, briefText, priorContext: context, toolConfig: { responseJson: true } });
+      let plan = safeParseJson(mk.text);
+      if (!plan) {
+        const fixCtx = context +
+          "\n\n## IMPORTANT FIX INSTRUCTION\nYour previous output was not valid JSON (it may have been truncated). " +
+          "Return ONLY a complete, valid JSON object matching the exact schema in your system prompt. " +
+          "Close every brace and bracket. No markdown, no comments, no trailing text.";
+        mk = await runAgent(AGENTS.maker, { model, apiKey, briefText, priorContext: fixCtx, toolConfig: { responseJson: true } });
+        plan = safeParseJson(mk.text);
+      }
+      out.maker = mk;
+      out.maker.plan = plan;
+      context += "\n\n## Wedding Plan (Ravi)\n" + mk.text + "\n";
+      hooks && hooks.onDone && hooks.onDone("maker", mk);
+    } catch (e) {
+      hooks && hooks.onError && hooks.onError("maker", e);
+      throw e;
     }
-    out.maker = mk;
-    out.maker.plan = plan;
-    context += "\n\n## Wedding Plan (Ravi)\n" + mk.text + "\n";
-    hooks && hooks.onDone && hooks.onDone("maker", mk);
-  } catch (e) {
-    hooks && hooks.onError && hooks.onError("maker", e);
-    throw e;
+  };
+
+  const steps = [
+    { key: "researcher", agent: AGENTS.researcher, toolConfig: { tools: [VENDOR_TOOL_DECLARATION], executors: { fetch_live_vendor_database: (args) => fetchVendorData(sheet, args) } } },
+    { key: "designer", agent: AGENTS.designer, toolConfig: undefined },
+    { key: "maker", agent: AGENTS.maker, toolConfig: undefined },
+    { key: "communicator", agent: AGENTS.communicator, toolConfig: undefined },
+    { key: "manager", agent: AGENTS.manager, toolConfig: undefined },
+  ];
+
+  const stopIdx = stopAt
+    ? Math.max(0, steps.findIndex((s) => s.key === stopAt))
+    : steps.length - 1;
+
+  for (let i = 0; i <= stopIdx; i++) {
+    const s = steps[i];
+    if (s.key === "maker") await runMaker();
+    else await run(s.key, s.agent, s.toolConfig);
   }
-
-  // 4. Communicator
-  await run("communicator", AGENTS.communicator);
-
-  // 5. Manager
-  await run("manager", AGENTS.manager);
 
   out._meta = { elapsedMs: Math.round(performance.now() - start), finishedAt: new Date().toISOString() };
   return out;
