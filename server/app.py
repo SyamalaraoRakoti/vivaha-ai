@@ -15,6 +15,7 @@ import io
 import json
 import os
 import re
+import time
 import urllib.request
 import urllib.error
 from datetime import datetime, timezone
@@ -106,22 +107,39 @@ def generate():
             payload[field] = data[field]
 
     url = "%s/models/%s:generateContent?key=%s" % (GEMINI_BASE, model, GEMINI_API_KEY)
-    req = urllib.request.Request(
-        url, data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=120) as r:
-            return jsonify(json.loads(r.read().decode()))
-    except urllib.error.HTTPError as e:
+
+    # Retry on transient rate-limit (HTTP 429 / "quota") errors, honouring the
+    # server's "retry in Xs" hint so a single agent call survives a busy moment.
+    for attempt in range(4):
+        req = urllib.request.Request(
+            url, data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+        )
         try:
-            detail = json.loads(e.read().decode())
-        except Exception:  # noqa: BLE001
+            with urllib.request.urlopen(req, timeout=120) as r:
+                return jsonify(json.loads(r.read().decode()))
+        except urllib.error.HTTPError as e:
+            body = e.read().decode()
             detail = {}
-        message = detail.get("error", {}).get("message", "Gemini returned HTTP %s" % e.code)
-        return jsonify(error=message, status=e.code), e.code
-    except Exception as e:  # noqa: BLE001
-        return jsonify(error="Backend error: %s" % e), 502
+            try:
+                detail = json.loads(body)
+            except Exception:  # noqa: BLE001
+                detail = {}
+            message = detail.get("error", {}).get("message", "Gemini returned HTTP %s" % e.code)
+            if e.code == 429 or "quota" in message.lower() or "rate" in message.lower():
+                if attempt < 3:
+                    m = re.search(r"retry in (\d+(?:\.\d+)?)s", message)
+                    wait = (float(m.group(1)) + 1.5) if m else (4 * (attempt + 1))
+                    time.sleep(min(wait, 60))
+                    continue
+            return jsonify(error=message, status=e.code), e.code
+        except Exception as ex:  # noqa: BLE001
+            if attempt < 3:
+                time.sleep(3 * (attempt + 1))
+                continue
+            return jsonify(error="Backend error: %s" % ex), 502
+
+    return jsonify(error="Gemini unavailable after retries."), 502
 
 
 if __name__ == "__main__":
