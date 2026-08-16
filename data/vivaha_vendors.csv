@@ -1,0 +1,49 @@
+vendor_id,name,category,city,price_min,price_max,rating,capacity,specialty,availability,contact
+V001,Royal Palace Lawns,Venue,Mumbai,250000,600000,4.8,1200,Heritage lawn with banquet hall,Available,+91 98200 11001
+V002,The Udaivilas Gardens,Venue,Udaipur,400000,900000,4.9,800,Lake-view palace wedding,Waitlist,+91 98200 11002
+V003,Sangam Banquets,Venue,Delhi,150000,350000,4.2,600,Budget banquet with catering tie-up,Available,+91 98200 11003
+V004,Pearl City Convention,Venue,Hyderabad,300000,700000,4.6,1500,AC convention centre,Available,+91 98200 11004
+V005,Coconut Grove Resort,Venue,Goa,350000,800000,4.7,500,Beachfront destination wedding,Available,+91 98200 11005
+V006,Nandini Gardens,Venue,Bengaluru,200000,450000,4.4,700,Garden wedding with mandap,Available,+91 98200 11006
+V007,Jodhpur Fort Heritage,Venue,Jaipur,500000,1200000,4.9,900,Fort palace destination,Waitlist,+91 98200 11007
+V008,Rajwada Kothi,Venue,Chennai,180000,400000,4.3,500,Traditional Tamil mandapam,Available,+91 98200 11008
+C001,Savya Rasoi Catering,Catering,Mumbai,500,1200,4.7,2000,North Indian multi-cuisine,Available,+91 98300 22001
+C002,Royal Thali Co,Catering,Jaipur,400,900,4.5,1500,Rajasthani thali & chaat,Available,+91 98300 22002
+C003,Andhra Bhojanam,Catering,Hyderabad,450,1000,4.6,1800,Andhra & Hyderabadi biryani,Available,+91 98300 22003
+C004,Udipi Delight,Catering,Chennai,350,800,4.4,1200,South Indian banana-leaf,Available,+91 98300 22004
+C005,Goa Coastal Kitchen,Catering,Goa,600,1400,4.5,900,Goan seafood & feni bar,Available,+91 98300 22005
+C006,Green Leaf Pure Veg,Catering,Delhi,450,950,4.3,1000,Pure veg multi-cuisine,Available,+91 98300 22006
+C007,Bengaluru Tiffin Co,Catering,Bengaluru,400,850,4.2,800,Karnataka specials,Limited,+91 98300 22007
+P001,Shutter Saga Studio,Photography,Mumbai,80000,250000,4.8,0,Candid + cinematic,Available,+91 98400 33001
+P002,Lens & Linen,Photography,Delhi,70000,220000,4.7,0,Editorial pre-wedding,Available,+91 98400 33002
+P003,Golden Hour Films,Photography,Udaipur,100000,300000,4.9,0,Destination drone coverage,Waitlist,+91 98400 33003
+P004,Madras Moments,Photography,Chennai,60000,180000,4.5,0,Traditional + candid,Available,+91 98400 33004
+P005,Pixel Peacock,Photography,Jaipur,90000,280000,4.8,0,Palace editorial shoots,Available,+91 98400 33005
+P006,Deccan Focus,Photography,Hyderabad,75000,200000,4.4,0,Full-day coverage,Available,+91 98400 33006
+D001,Petal & Pandal,Decor & Florals,Bengaluru,50000,300000,4.7,1000,Floral mandap + stage,Available,+91 98500 44001
+D002,Marigold Magic,Decor & Florals,Jaipur,40000,250000,4.6,800,Rajasthani floral themes,Available,+91 98500 44002
+D003,Luxe Lanterns,Decor & Florals,Mumbai,80000,400000,4.8,1200,Luxury lighting & drapes,Available,+91 98500 44003
+D004,Tulsi Tent House,Decor & Florals,Delhi,30000,180000,4.3,900,Tents + seating + stage,Limited,+91 98500 44004
+D005,Coastal Decor Co,Decor & Florals,Goa,70000,350000,4.7,600,Beach set-up & fairy lights,Available,+91 98500 44005
+M001,Henna by Heena,Mehendi,Delhi,8000,30000,4.8,0,Bridal mehendi artist,Available,+91 98600 55001
+M002,Rajasthani Mehendi Arts,Mehendi,Jaipur,6000,25000,4.6,0,Intricate bridal designs,Available,+91 98600 55002
+M003,Mumbai Mehendi Studio,Mehendi,Mumbai,7000,28000,4.5,0,Bridal + guest mehendi,Available,+91 98600 55003
+M004,Chennai Henna House,Mehendi,Chennai,5000,20000,4.4,0,Traditional South Indian,Available,+91 98600 55004
+B001,Glow Bridal Studio,Makeup & Beauty,Mumbai,25000,90000,4.9,0,Bridal HD makeup,Waitlist,+91 98700 66001
+B002,Radiance Makeovers,Makeup & Beauty,Delhi,20000,75000,4.7,0,Bridal + family makeup,Available,+91 98700 66002
+B003,Golden Glow Jaipur,Makeup & Beauty,Jaipur,18000,65000,4.6,0,Airbrush bridal,Available,+91 98700 66003
+B004,Silk & Shine,Makeup & Beauty,Bengaluru,22000,70000,4.5,0,South Indian bridal looks,Available,+91 98700 66004
+E001,Beats of Bharat,DJ & Entertainment,Mumbai,40000,150000,4.7,0,Bollywood + EDM,Available,+91 98800 77001
+E002,Dhol Diwas,DJ & Entertainment,Delhi,30000,120000,4.6,0,Dhol + live band + baraat,Available,+91 98800 77002
+E003,Goa Beach Beats,DJ & Entertainment,Goa,50000,160000,4.5,0,Sunset beach party DJ,Available,+91 98800 77003
+E004,Hyderabad Harmony,DJ & Entertainment,Hyderabad,35000,110000,4.4,0,Live qawwali + band,Available,+91 98800 77004
+T001,Royal Wheels,Transport,Mumbai,20000,90000,4.6,0,Vintage + AC coaches,Available,+91 98900 88001
+T002,Sheesh Mahal Rides,Transport,Jaipur,25000,120000,4.8,0,Decorated vintage car,Available,+91 98900 88002
+T003,Deccan Fleet,Transport,Hyderabad,18000,70000,4.4,0,Tempo traveller + buses,Available,+91 98900 88003
+T004,Namma Travels,Transport,Bengaluru,15000,60000,4.3,0,Bus + cab fleet,Limited,+91 98900 88004
+A001,Kanchi Silk House,Wedding Attire,Chennai,30000,150000,4.9,0,Kanchipuram silk sarees,Available,+91 99000 99001
+A002,Banarasi Weaves,Wedding Attire,Delhi,25000,120000,4.8,0,Banarasi + designer lehengas,Available,+91 99000 99002
+A003,Jaipur Juttis & Co,Wedding Attire,Jaipur,3000,15000,4.5,0,Custom juttis & accessories,Available,+91 99000 99003
+I001,Ink & Ivory Invites,Invitation & Stationery,Bengaluru,15000,80000,4.7,0,Digital + luxury printed cards,Available,+91 99100 11101
+I002,Mughal Miniature Cards,Invitation & Stationery,Jaipur,20000,90000,4.6,0,Handmade miniature invites,Available,+91 99100 11102
+I003,Coastal Calligraphy,Invitation & Stationery,Goa,12000,60000,4.4,0,Beach themed e-invites,Available,+91 99100 11103

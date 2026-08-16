@@ -1,0 +1,17 @@
+# Render Blueprint — deploys the Vivaha AI backend web service.
+# Use "New → Blueprint" on https://dashboard.render.com and point at this repo.
+services:
+  - type: web
+    name: vivaha-ai-api
+    runtime: python
+    plan: free
+    rootDir: server
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: VENDOR_SHEET_URL
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: "*"

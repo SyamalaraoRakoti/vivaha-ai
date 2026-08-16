@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vivaha AI — Agentic Wedding Planning Organisation</title>
+  <meta name="description" content="A fully agentic organisation of five specialised AI agents that plan an Indian wedding end-to-end." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <div class="logo">🪔</div>
+      <div>
+        <h1>Vivaha <span>AI</span></h1>
+        <p class="tagline">An agentic organisation that plans Indian weddings end-to-end</p>
+      </div>
+    </div>
+    <div class="header-badge">5 agents · 1 pipeline · live data</div>
+  </header>
+
+  <main>
+    <section class="setup-card">
+      <h2>1 · Configure the organisation</h2>
+      <p class="hint" id="mode-note"></p>
+      <form id="config-form" autocomplete="off">
+        <div class="grid">
+          <label class="field">
+            <span>Model</span>
+            <select id="model"></select>
+          </label>
+          <label class="field">
+            <span>Couple</span>
+            <input id="couple" type="text" value="Ananya & Rohan" />
+          </label>
+          <label class="field">
+            <span>Wedding city</span>
+            <input id="city" type="text" value="Jaipur" />
+          </label>
+          <label class="field">
+            <span>Wedding date</span>
+            <input id="date" type="date" value="2026-11-21" />
+          </label>
+          <label class="field">
+            <span>Total budget (₹)</span>
+            <input id="budget" type="number" min="1" value="1500000" />
+          </label>
+          <label class="field">
+            <span>Guest count</span>
+            <input id="guests" type="number" min="1" value="350" />
+          </label>
+          <label class="field full">
+            <span>Style / vision</span>
+            <input id="style" type="text" value="Royal Rajasthani palace wedding with a modern touch" />
+          </label>
+          <label class="field full">
+            <span>Top priorities</span>
+            <input id="priorities" type="text" value="Photography, food quality, and comfort for grandparents" />
+          </label>
+          <label class="field full">
+            <span>Special notes (optional)</span>
+            <input id="notes" type="text" placeholder="e.g. vegetarian food only, outdoor sangeet…" />
+          </label>
+        </div>
+        <details class="advanced" id="advanced">
+          <summary>Advanced — direct Gemini access (local testing only)</summary>
+          <div class="grid">
+            <label class="field full">
+              <span>Gemini API key</span>
+              <input id="api-key" type="password" placeholder="Paste your Gemini API key (starts with AIza…)" />
+            </label>
+            <label class="field full">
+              <span>Live data — Google Sheet (public share URL or ID)</span>
+              <input id="sheet-url" type="text" placeholder="https://docs.google.com/spreadsheets/d/<ID>/edit…" />
+            </label>
+          </div>
+        </details>
+        <button type="submit" id="run-btn" class="run-btn">▶ Run the agentic pipeline</button>
+      </form>
+      <p class="status" id="setup-status"></p>
+    </section>
+
+    <section class="pipeline" id="pipeline" aria-label="Agent pipeline">
+      <h2>2 · The pipeline</h2>
+      <div class="chain" id="chain">
+        <div class="node" data-key="researcher"><span class="node-emoji">🔍</span><span class="node-name">Researcher</span><span class="node-agent">Aanya</span></div>
+        <div class="arrow">→</div>
+        <div class="node" data-key="designer"><span class="node-emoji">🎨</span><span class="node-name">Designer</span><span class="node-agent">Ishaan</span></div>
+        <div class="arrow">→</div>
+        <div class="node" data-key="maker"><span class="node-emoji">🛠️</span><span class="node-name">Maker</span><span class="node-agent">Ravi</span></div>
+        <div class="arrow">→</div>
+        <div class="node" data-key="communicator"><span class="node-emoji">📣</span><span class="node-name">Communicator</span><span class="node-agent">Meera</span></div>
+        <div class="arrow">→</div>
+        <div class="node" data-key="manager"><span class="node-emoji">🧭</span><span class="node-name">Manager</span><span class="node-agent">Arjun</span></div>
+      </div>
+    </section>
+
+    <section class="outputs" id="outputs">
+      <h2>3 · Agent outputs <span class="subtitle">— each agent's output becomes the next agent's input</span></h2>
+      <div id="outputs-container"></div>
+    </section>
+
+    <section class="package" id="package" hidden>
+      <h2>4 · The wedding plan package <span class="subtitle">— the Maker's working artefact</span></h2>
+      <div class="package-actions">
+        <button id="download-btn" class="ghost-btn">⬇ Download plan JSON</button>
+        <button id="copy-btn" class="ghost-btn">Copy JSON</button>
+      </div>
+      <div id="package-body"></div>
+    </section>
+
+    <section class="evidence" id="evidence" hidden>
+      <h2>5 · Live data evidence</h2>
+      <div id="evidence-body"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Vivaha AI — Final Project for H9CEAI (Agentic Organisation). Built with Gemini + a live Google Sheets data source.</p>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="agents.js"></script>
+  <script src="app.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
