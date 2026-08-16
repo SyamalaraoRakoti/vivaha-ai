@@ -246,7 +246,8 @@
   function setModeNote() {
     const note = $("mode-note");
     if (usingBackend()) {
-      note.innerHTML = '🟢 <strong>Hosted backend active.</strong> The Gemini key and the live Google Sheet are managed server-side — just fill in the wedding details and press run. No API key needed.';
+      note.innerHTML = "";
+      note.hidden = true;
       $("advanced").hidden = true;
     } else {
       note.innerHTML = '⚠ <strong>Backend not configured.</strong> Set <code>API_BASE</code> in <code>config.js</code> after deploying the backend to Render. Until then, use "Advanced" below to supply a Gemini key + Google Sheet directly (local testing).';

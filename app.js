@@ -164,7 +164,11 @@ async function runAgentTurn({ model, apiKey, systemPrompt, userPrompt, tools, to
     contents,
   };
   if (tools && tools.length) bodyBase.tools = [{ functionDeclarations: tools }];
-  if (responseJson) bodyBase.generationConfig = { responseMimeType: "application/json" };
+  if (responseJson) {
+    bodyBase.generationConfig = { responseMimeType: "application/json", maxOutputTokens: 16384 };
+  } else {
+    bodyBase.generationConfig = { maxOutputTokens: 8192 };
+  }
 
   let iterations = 8;
   while (iterations-- > 0) {
@@ -278,11 +282,12 @@ function renderMarkdown(md) {
 
 function safeParseJson(text) {
   if (!text) return null;
-  let t = text.trim();
+  let t = String(text).replace(/^\uFEFF/, "").trim();
   t = t.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
   const first = t.indexOf("{");
   const last = t.lastIndexOf("}");
   if (first !== -1 && last > first) t = t.slice(first, last + 1);
+  t = t.replace(/,\s*([}\]])/g, "$1");
   try { return JSON.parse(t); } catch (_) { return null; }
 }
 
@@ -392,9 +397,27 @@ async function runPipeline(cfg, hooks) {
   // 2. Designer
   await run("designer", AGENTS.designer);
 
-  // 3. Maker — produces the JSON artefact
-  await run("maker", AGENTS.maker, { responseJson: true });
-  out.maker.plan = safeParseJson(out.maker.text);
+  // 3. Maker — produces the JSON artefact (with a retry guard against truncation)
+  hooks && hooks.onAgent && hooks.onAgent("maker");
+  try {
+    let mk = await runAgent(AGENTS.maker, { model, apiKey, briefText, priorContext: context, toolConfig: { responseJson: true } });
+    let plan = safeParseJson(mk.text);
+    if (!plan) {
+      const fixCtx = context +
+        "\n\n## IMPORTANT FIX INSTRUCTION\nYour previous output was not valid JSON (it may have been truncated). " +
+        "Return ONLY a complete, valid JSON object matching the exact schema in your system prompt. " +
+        "Close every brace and bracket. No markdown, no comments, no trailing text.";
+      mk = await runAgent(AGENTS.maker, { model, apiKey, briefText, priorContext: fixCtx, toolConfig: { responseJson: true } });
+      plan = safeParseJson(mk.text);
+    }
+    out.maker = mk;
+    out.maker.plan = plan;
+    context += "\n\n## Wedding Plan (Ravi)\n" + mk.text + "\n";
+    hooks && hooks.onDone && hooks.onDone("maker", mk);
+  } catch (e) {
+    hooks && hooks.onError && hooks.onError("maker", e);
+    throw e;
+  }
 
   // 4. Communicator
   await run("communicator", AGENTS.communicator);
