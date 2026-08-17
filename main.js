@@ -206,7 +206,7 @@
         setAgentState(key, "done", "done");
         if (key === "maker") {
           setAgentOutput(key, res.plan
-            ? '<div class="json-ok">✓ Valid JSON artefact — rendered below in the wedding plan package.</div>'
+            ? '<div class="json-ok">✓ Valid JSON artefact:</div>' + renderPlan(res.plan)
             : '<pre class="json">' + esc(res.text) + "</pre>");
         } else {
           setAgentOutput(key, renderMarkdown(res.text));
