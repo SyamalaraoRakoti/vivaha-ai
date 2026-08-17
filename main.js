@@ -8,6 +8,7 @@
   const state = {
     running: false,
     results: null,
+    makerPlan: null,
     marketRows: [],
   };
 
@@ -153,7 +154,7 @@
   /* --------------------------- plan package ----------------------------- */
 
   function renderPackage() {
-    const plan = state.results && state.results.maker && state.results.maker.plan;
+    const plan = state.makerPlan;
     if (!plan) {
       $("package").hidden = false;
       $("package-body").innerHTML = '<p class="warn">⚠ The Maker returned a response, but it could not be parsed as JSON. Its raw output is shown in the Maker card.</p>';
@@ -164,7 +165,7 @@
   }
 
   function downloadJson() {
-    const plan = state.results && state.results.maker && state.results.maker.plan;
+    const plan = state.makerPlan;
     if (!plan) return;
     const blob = new Blob([JSON.stringify(plan, null, 2)], { type: "application/json" });
     const a = document.createElement("a");
@@ -175,7 +176,7 @@
   }
 
   function copyJson() {
-    const plan = state.results && state.results.maker && state.results.maker.plan;
+    const plan = state.makerPlan;
     if (!plan) return;
     navigator.clipboard && navigator.clipboard.writeText(JSON.stringify(plan, null, 2));
     const b = $("copy-btn");
@@ -192,6 +193,7 @@
     if (!cfg) { setStatus("Direct mode needs both a Gemini API key and a Google Sheet URL.", true); return; }
 
     state.running = true;
+    state.makerPlan = null;
     $("run-btn").disabled = true;
     $("run-btn").textContent = "Agents working…";
     setStatus("Running the pipeline…", false);
@@ -205,6 +207,7 @@
       onDone: (key, res) => {
         setAgentState(key, "done", "done");
         if (key === "maker") {
+          state.makerPlan = res.plan;
           setAgentOutput(key, res.plan
             ? '<div class="json-ok">✓ Valid JSON artefact:</div>' + renderPlan(res.plan)
             : '<pre class="json">' + esc(res.text) + "</pre>");
